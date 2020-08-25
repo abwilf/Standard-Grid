@@ -3,7 +3,8 @@ import time
 import os
 
 if __name__=="__main__":
-
+	for i in range (100):
+		print ("DO NOT RUN THIS ON MUTLICOMP ATLAS CLUSTER! USE CONTROLLED! ")
 	grid=standard_grid.Grid("../../../ml_code_json.py","./results/")
 
 	grid.register('bs', [32,64])
