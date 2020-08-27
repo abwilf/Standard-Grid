@@ -221,7 +221,7 @@ class Grid:
 
 		if hard_resume:
 			while True:
-				permission=log.status("Specified hard_resume, are you sure you want to add the unfinished instances to the grid? (y,n)")
+				permission=log.status("Specified hard_resume, are you sure you want to add the unfinished instances to the grid? (y,n)",require_input=True)
 				if permission=="y":
 					break
 				elif permission=="n":
