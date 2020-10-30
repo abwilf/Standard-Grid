@@ -194,8 +194,12 @@ class Grid:
 			else:
 				removable_content=[os.path.join("STANDARDGRID_instance_output")]
 			for r in removable_content:
-				if os.path.exists(r):
-					os.remove(os.path.join(output_code_fname,r))
+				rpath=os.path.join(shell_instance_dir,r)
+				if os.path.exists(rpath) :
+					if os.path.isfile(rpath):
+						os.remove(rpath)
+					else:
+						os.rmdir(rpath)
 				else:
 					pass
 
@@ -284,7 +288,7 @@ class Grid:
 		main_handle.write("wait")
 		main_handle.close()
 
-		log.success("Grid runners established under %s"%os.path.join(self.grid_dir,attempt))
+		log.success("Grid runners established under %s"%os.path.join(self.grid_dir,"central",attempt))
 
 	def apply(self,apply_fn,input_file,output_file):
 		started,finished,failed,not_started=self.get_status()
