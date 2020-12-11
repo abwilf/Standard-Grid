@@ -1,4 +1,4 @@
-SG_PATH = '/z/abwilf/temp/Standard-Grid'
+SG_PATH = '/z/abwilf/Standard-Grid'
 import sys
 sys.path.append(SG_PATH)
 import pickle

@@ -14,13 +14,13 @@ def load_json(file_stub):
     with open(filename) as json_file:
         return json.load(json_file)
 
-def send_email(subject='Hi there', text='Hello!', secrets_path='./mailgun_secrets.json'):
+def send_email(subject, text, to_addr, secrets_path):
     secrets = load_json(secrets_path)
     return requests.post(
         secrets['url'],
         auth=("api", secrets['api_key']),
         data={"from": secrets['from_addr'],
-            "to": secrets['to_addr'],
+            "to": to_addr,
             "subject": subject,
             "text": text})
 
@@ -82,14 +82,14 @@ class Runtime():
 		msg += '\nETA: ' + date_str + '\n\n'
 		return msg
 
-def get_hash(in_str, num_chars):
+def get_hash(in_str, hash_len):
 	hash_object = hashlib.sha512(in_str.encode("utf-8"))
-	return str(hash_object.hexdigest())[:num_chars]
+	return str(hash_object.hexdigest())[:hash_len]
 
 #TODO: Ensure grid is not modified if already generated
 class Grid:
-	def __init__(self,entry_script_, grid_root_,num_chars=4,resume_on_retry_=True,grid_operator_=product,description_="Grid search object"):
-		'''num_chars: number of characters to use in hashes'''
+	def __init__(self,entry_script_, grid_root_,hash_len=4, email_args=None, resume_on_retry_=True,grid_operator_=product,description_="Grid search object"):
+		'''hash_len: number of characters to use in hashes'''
 		if os.path.isfile(entry_script_) is False:
 			log.error("Entry point does not exist. Exiting ...!",error=True)
 		self.entry_script=entry_script_
@@ -108,7 +108,9 @@ class Grid:
 		self.grid_generated=False
 		self.grid_saved=False
 		self.rt=Runtime()
-		self.num_chars=num_chars
+		self.hash_len=hash_len
+		self.email_sent=False
+		self.email_args = email_args
 
 	def register(self,key,value):
 		if self.grid_generated==True:
@@ -140,7 +142,7 @@ class Grid:
 				grid_args=self.gen_args(i)
 				final_command=grid_args
 				total_commands_str.append(final_command)
-				self.grid_hash=get_hash("".join(total_commands_str), num_chars=self.num_chars)
+				self.grid_hash=get_hash("".join(total_commands_str), hash_len=self.hash_len)
 
 		create_grid_hash__()
 
@@ -203,7 +205,7 @@ class Grid:
 		for i in range(len(self.grid)):
 			grid_instance=self.gen_args(i)
 			command=prefix+" "+entry_point_relative_to_instance+" "+grid_instance
-			command_hex=get_hash(command, self.num_chars)
+			command_hex=get_hash(command, self.hash_len)
 			command=command+" "+postfix
 			command_dir=os.path.join(instances_dir,command_hex)
 			os.makedirs(command_dir)
@@ -249,7 +251,15 @@ class Grid:
 		log.status("Finished:		%.2f%%"%(float(len(finished))   *100/len(command_hexes)))
 		log.status("Failed:		%.2f%%"%(float(len(failed))     *100/len(command_hexes)))
 
-		print(self.rt.get_eta(num_completed=len(finished)+len(failed), num_tot=len(command_hexes)), end='')
+		num_completed = len(finished)+len(failed)
+		num_tot = len(command_hexes)
+		print(self.rt.get_eta(num_completed, num_tot), end='')
+		
+		if self.email_args is not None and not self.email_sent and num_completed == num_tot:
+			self.email_sent = True
+			self.save(dump_fname=f'./.{self.grid_hash}.pkl')
+			send_email(**self.email_args)
+
 		return started,finished,failed,not_started
 
 	def resume_as_before(self,hard_resume=False):

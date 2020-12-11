@@ -1,13 +1,20 @@
-SG_PATH = '/z/abwilf/temp/Standard-Grid'
+SG_PATH = '/z/abwilf/Standard-Grid'
 import sys
 sys.path.append(SG_PATH)
 import standard_grid
 from utils import *
 from hp import hp
+from os.path import join
 
 if __name__=="__main__":
-    num_chars = 4 # the number of characters in each hash.  if running lots of tests, may have collision if too few chars.  elif running few tests, can be nice to have smaller identifying strings
-    grid = standard_grid.Grid('./model.py','./results/', num_chars=num_chars)
+    hash_len = 4 # the number of characters in each hash.  if running lots of tests, may have collision if too few chars.  elif running few tests, can be nice to have smaller identifying strings
+    email_args= {
+        'subject': 'Hello there',
+        'text': '',
+        'to_addr': 'your-email@gmail.com',
+        'secrets_path': './mailgun_secrets.json',
+    }
+    grid = standard_grid.Grid('./model.py','./results/', hash_len=hash_len, email_args=None)
 
     for k,v in hp.items():
         grid.register(k,v)
@@ -22,11 +29,10 @@ if __name__=="__main__":
     hash_out = grid.create_runner(num_runners=num_gpus,runners_prefix=['CUDA_VISIBLE_DEVICES=%d sh'%i for i in range(num_gpus)],parallel=num_parallel)
 
     print(f'''
-# update shell params
 
 hash='{hash_out}'
 
-root='/z/abwilf/temp/Standard-Grid/example'
+root={join(SG_PATH,'example')} # NOTE: this will likely be different depending on where your code is
 attempt='0'
 cd $root/results/${{hash}}/central/attempt_${{attempt}}/
 chmod +x main.sh

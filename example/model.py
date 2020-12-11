@@ -1,4 +1,4 @@
-SG_PATH = '/z/abwilf/temp/Standard-Grid'
+SG_PATH = '/z/abwilf/Standard-Grid'
 import sys
 sys.path.append(SG_PATH)
 import standard_grid, os, time, pickle, json, pathlib
@@ -10,7 +10,7 @@ def get_arguments():
     
     # format: (name, type, default, help msg)
     args = [
-        ('--bs', int, 32, 'The batch size.'),
+        ('--batch_size', int, 32, 'The batch size.'),
         ('--lr', float, 0.001, 'Learning rate.'),
         ('--epochs', int, 25, 'The number of epochs.'),
     ]
@@ -20,12 +20,10 @@ def get_arguments():
     args = parser.compile_argparse()
     return vars(args)
 
-
 def main(args):
     '''ML model code goes here!'''
     print('Running model...')
-
-    time.sleep(3)
+    time.sleep(10)
 
     results = {
         'best_loss': .00123,
@@ -50,7 +48,7 @@ def main(args):
     return results
 
 if __name__ == '__main__':
-    base_path = '/z/abwilf/temp/Standard-Grid/example'
+    base_path = '/z/abwilf/Standard-Grid/example'
     out_dir = 'output/'
     mkdirp(out_dir)
 
