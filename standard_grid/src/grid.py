@@ -1,24 +1,95 @@
 from itertools import product
 from standard_grid import log
 from collections import OrderedDict 
-import hashlib
-import os
-import pickle
-import sys
-import time
-import math
-import random
+import numpy as np
+import hashlib, os, pickle, sys, time, math, random, datetime, time, requests
+import json, requests, datetime
+random.seed(20)
 
+NUM_SECS_WEEK = 60*60*24*7
+NUM_SECS_DAY = 60*60*24
 
-def get_hash(in_str):
+def load_json(file_stub):
+    filename = file_stub
+    with open(filename) as json_file:
+        return json.load(json_file)
 
+def send_email(subject='Hi there', text='Hello!', secrets_path='./mailgun_secrets.json'):
+    secrets = load_json(secrets_path)
+    return requests.post(
+        secrets['url'],
+        auth=("api", secrets['api_key']),
+        data={"from": secrets['from_addr'],
+            "to": secrets['to_addr'],
+            "subject": subject,
+            "text": text})
+
+class Runtime():
+	def __init__(self):
+		self.start_time = datetime.datetime.now()
+
+	def get(self):
+		end_time = datetime.datetime.now()
+		sec = (end_time - self.start_time).seconds
+		days = int(sec/(3600*24))
+		hrs = int(sec/3600)
+		mins = int((sec % 3600)/60)
+		
+		days_str = f'{days} days, ' if days > 0 else ''
+		hrs_str = f'{hrs} hrs, ' if hrs > 0 else ''
+		print(f'Runtime: {days_str}{hrs_str}{mins} mins')
+		return sec
+	
+	def get_avg(self, num_completed):
+		end_time = datetime.datetime.now()
+		sec = (end_time - self.start_time).seconds
+		days = int(sec/(3600*24))
+		hrs = int(sec/3600)
+		mins = int((sec % 3600)/60)
+		
+		days_str = f'{days} days, ' if days > 0 else ''
+		hrs_str = f'{hrs} hrs, ' if hrs > 0 else ''
+		print(f'Finished {num_completed} tests')
+		print(f'Runtime: {days_str}{hrs_str}{mins} mins')
+		print(f'Time per test: {(sec/num_completed) / 60} mins')
+
+	def get_eta(self, num_completed, num_tot):
+		if num_completed == 0:
+			return f'Total to complete: {num_tot}\n'
+		elif num_completed == num_tot:
+			sec = self.get()
+			return f'''Total completed: {num_tot}\nTime per test: {np.round(sec/(num_completed*60), decimals=2)} mins\n'''
+		
+		time_spent = (datetime.datetime.now() - self.start_time).seconds 
+		time_tot = time_spent * (num_tot / num_completed)
+		time_left = time_tot - time_spent
+		
+		msg = '\n##### Progress #####'
+		msg += f'\nCompleted: {num_completed}\nRemaining: {num_tot-num_completed}\nTotal: {num_tot}'
+		if time_left < NUM_SECS_WEEK - 3*NUM_SECS_DAY:
+			msg += '\nTime spent: ' + time.strftime('%H:%M:%S', time.gmtime(time_spent)) + ' (per test: ' + time.strftime('%H:%M:%S', time.gmtime(time_spent/num_completed)) + ')'
+			msg += '\nTime remaining: ' + time.strftime('%H:%M:%S', time.gmtime(time_left))
+			strftime_str = '%a %I:%M:%S %p'
+			
+		# if more than a week, include date
+		else:
+			strftime_str = '%a %b %d, %I:%M:%S %p'
+
+		date_str = datetime.datetime.fromtimestamp(int(time.time()+time_left)).strftime(strftime_str)
+		if date_str[0] == '0':
+			date_str = date_str[1:]
+
+		msg += '\nETA: ' + date_str + '\n\n'
+		return msg
+
+def get_hash(in_str, num_chars):
 	hash_object = hashlib.sha512(in_str.encode("utf-8"))
-	return str(hash_object.hexdigest())
+	return str(hash_object.hexdigest())[:num_chars]
 
 #TODO: Ensure grid is not modified if already generated
 class Grid:
-
-	def __init__(self,entry_script_, grid_root_,resume_on_retry_=True,grid_operator_=product,description_="Grid search object"):
+	def __init__(self,entry_script_, grid_root_,num_chars=4,resume_on_retry_=True,grid_operator_=product,description_="Grid search object"):
+		'''num_chars: number of characters to use in hashes'''
 		if os.path.isfile(entry_script_) is False:
 			log.error("Entry point does not exist. Exiting ...!",error=True)
 		self.entry_script=entry_script_
@@ -36,6 +107,8 @@ class Grid:
 		self.shell_instances_generated=False
 		self.grid_generated=False
 		self.grid_saved=False
+		self.rt=Runtime()
+		self.num_chars=num_chars
 
 	def register(self,key,value):
 		if self.grid_generated==True:
@@ -67,13 +140,13 @@ class Grid:
 				grid_args=self.gen_args(i)
 				final_command=grid_args
 				total_commands_str.append(final_command)
-				self.grid_hash=get_hash("".join(total_commands_str))
+				self.grid_hash=get_hash("".join(total_commands_str), num_chars=self.num_chars)
 
 		create_grid_hash__()
 
 		self.grid_dir=os.path.join(self.grid_root,self.grid_hash)
 		if os.path.isdir(self.grid_dir) is True:
-			log.error("Identical grid already exists. Exiting ...!",error=True)
+			log.error(f"Identical grid already exists at hash {self.grid_hash}. Exiting ...!",error=True)
 
 		log.success("Grid successfully generated.")
 
@@ -130,7 +203,7 @@ class Grid:
 		for i in range(len(self.grid)):
 			grid_instance=self.gen_args(i)
 			command=prefix+" "+entry_point_relative_to_instance+" "+grid_instance
-			command_hex=get_hash(command)
+			command_hex=get_hash(command, self.num_chars)
 			command=command+" "+postfix
 			command_dir=os.path.join(instances_dir,command_hex)
 			os.makedirs(command_dir)
@@ -176,6 +249,7 @@ class Grid:
 		log.status("Finished:		%.2f%%"%(float(len(finished))   *100/len(command_hexes)))
 		log.status("Failed:		%.2f%%"%(float(len(failed))     *100/len(command_hexes)))
 
+		print(self.rt.get_eta(num_completed=len(finished)+len(failed), num_tot=len(command_hexes)), end='')
 		return started,finished,failed,not_started
 
 	def resume_as_before(self,hard_resume=False):
@@ -289,6 +363,8 @@ class Grid:
 		main_handle.close()
 
 		log.success("Grid runners established under %s"%os.path.join(self.grid_dir,"central",attempt))
+		hash_out = self.grid_dir.split("/")[-1]
+		return hash_out
 
 	def apply(self,apply_fn,input_file,output_file):
 		started,finished,failed,not_started=self.get_status()
