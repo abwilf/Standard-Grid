@@ -37,7 +37,7 @@ hp = {
 
 WARNING: the following will use 3 gpus. You can change this in `generate.py`
 
-First, you'll **create a grid**.  This is an object stored in `./{grid_hex}.pkl` which keeps track of your search process, where `grid_hex` is a hash of your hyperparameters.  I shorten this hash for readability, though with large numbers of tests this may lead to a collision; if it does, you will see an eror at "compile time" - i.e., you'll see the error when the grid is created in `generate.py`, not when the individual tests are run. This is a great feature. If you see an error, increase `hash_len` in `generate.py` until the collision disappears. To create the grid in this example, run
+First, you'll **create a grid**.  This is an object stored in `./{grid_hex}.pkl` which keeps track of your search process, where `grid_hex` is a hash of your hyperparameters.  I shorten this hash for readability, though with large numbers of tests this may lead to a collision; if it does, you will see an error at "compile time" - i.e., you'll see the error when the grid is created in `generate.py`, not when the individual tests are run. This is a great feature. If you see an error, increase `hash_len` in `generate.py` until the collision disappears (or if readability doesn't matter to you, up `hash_len` to 128). To create the grid in this example, run
 ```
 python3 generate.py
 ```
@@ -46,7 +46,7 @@ You should see some logging output, followed by
 ```
 hash='c542'
 
-root=/z/abwilf/Standard-Grid/example
+root=/path/to/your/Standard-Grid/folder
 attempt='0'
 cd $root/results/${hash}/central/attempt_${attempt}/
 chmod +x main.sh
@@ -56,7 +56,7 @@ p status.py ${hash}
 p interpret.py ${hash}
 ```
 
-Copy and paste this output into your terminal to start the grid search.  You'll see that a few jobs are immediately running.
+Copy and paste this whole block into your terminal to start the grid search.  You'll see that three jobs immediately run.
 ```
 Running 6aea
 Running 4e05
@@ -99,7 +99,7 @@ Total completed: 18
 Time per test: 0.07 mins
 ```
 
-When your search has finished, your results will be in `./results/{hash}/instances`.  Each run has its own hash, representing a different hyperparameter combination. If you look in one of these subdirectories, you will find the `output` directory we expect along with the `accuracy_plot.png` and `results.txt` for that run.
+When your search has finished, your results will be in `./results/{hash}/instances`.  Each run has its own hash, representing a different hyperparameter combination. If you look in one of these subdirectories, you will find the `output` directory we expect, containing `accuracy_plot.png` and `results.txt` for that run.
 
 You'll see that your results have also been collated into a csv file.
 ```
@@ -114,13 +114,15 @@ best_loss,worst_loss,STDGRID_batch_size,STDGRID_epochs,STDGRID_lr,STDGRID_comman
 ...
 ```
 
+This is by no means an exhaustive use of Standard-Grid, but hopefully it provides you a good start.
+
 ## Notes and Extras
 1. To get this working with your code, you'll need to replace the following line in `generate.py` with the correct working directory where your code is stored
 ```
 root=/path/to/your/proj
 ```
-2. `results.txt` must have same columns across each element in a single grid search, otherwise the `results.txt` files will not be collated into a single csv.
-3. If you need to stop a search in progress, I don't know of an incredibly elegant way (though there probably is one).  If you exit the program while `main.sh` is running, the workers will still run in the background.  I usually insert an error into `model.py` (e.g., an undefined `hi`), `kill` the processes currently running by finding it with `nvidia-smi` or `ps ax | grep python`, and watch as all the rest of the queued processes quickly fail.
+2. `results.txt` must have same keys across each element in a grid search, otherwise the `results.txt` files will not be collated into a single csv.
+3. I don't know of an incredibly elegant way to stop an ongoing search (though there probably is one).  If you exit the program while `main.sh` is running, the workers will still run in the background (a feature, not a bug).  I usually insert an error into `model.py` (e.g., an undefined `hi`), `kill` the processes currently running by finding their ids with `nvidia-smi`, and watch as all the rest of the queued processes quickly fail.
 4. I often find that I need to remove previous grid searches I've run, and it's a pain to do this by hand each time.  I wrote myself a helper function and put it in my `~./bashrc`.  To get it to work, simply add this to your `bashrc`, `source ~/.bashrc`, and run it with `rmhash $hash` from the relevant directory.  Be careful! I accidentally wiped out the wrong folder once.
 
 ```bash
