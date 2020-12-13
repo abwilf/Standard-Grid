@@ -15,6 +15,8 @@ def load_json(file_stub):
         return json.load(json_file)
 
 def send_email(subject, text, to_addr, secrets_path):
+    subject = subject if subject != '' else 'hi!' # else will cause 400 error
+    text = text if text != '' else 'hi!'
     print(f'Sending email to {to_addr}')
     secrets = load_json(secrets_path)
     return requests.post(
@@ -112,6 +114,7 @@ class Grid:
         self.hash_len=hash_len
         self.email_sent=False
         self.email_args = email_args
+        self.final_status=None
 
     def register(self,key,value):
         if self.grid_generated==True:
@@ -149,7 +152,7 @@ class Grid:
 
         self.grid_dir=os.path.join(self.grid_root,self.grid_hash)
         if os.path.isdir(self.grid_dir) is True:
-            log.error(f"Identical grid already exists at hash {self.grid_hash}. Exiting ...!",error=True)
+            log.error(f"Identical grid already exists. Exiting ...! \n\nhash='{self.grid_hash}'\n",error=True)
 
         log.success("Grid successfully generated.")
 
@@ -254,13 +257,22 @@ class Grid:
 
         num_completed = len(finished)+len(failed)
         num_tot = len(command_hexes)
-        print(self.rt.get_eta(num_completed, num_tot), end='')
         
-        # print(self.email_args, self.email_sent, num_completed, num_tot)
-        if self.email_args is not None and not self.email_sent and num_completed == num_tot:
-            self.email_sent = True
-            self.save(dump_fname=f'./.{self.grid_hash}.pkl')
-            send_email(**self.email_args)
+        if num_completed == num_tot:
+            change = False
+            if self.final_status is None:
+                self.final_status = self.rt.get_eta(num_completed, num_tot)
+                change = True
+            
+            print(self.final_status, end='')
+
+            if self.email_args is not None and not self.email_sent:
+                self.email_sent = True
+                send_email(**self.email_args)
+                change = True
+            
+            if change:
+                self.save(dump_fname=f'./.{self.grid_hash}.pkl')
 
         return started,finished,failed,not_started
 
