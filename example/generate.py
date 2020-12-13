@@ -32,7 +32,7 @@ if __name__=="__main__":
 
 hash='{hash_out}'
 
-root={join(SG_PATH,'example')} # NOTE: this will likely be different depending on where your code is
+root=$(pwd)
 attempt='0'
 cd $root/results/${{hash}}/central/attempt_${{attempt}}/
 chmod +x main.sh

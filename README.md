@@ -117,13 +117,9 @@ best_loss,worst_loss,STDGRID_batch_size,STDGRID_epochs,STDGRID_lr,STDGRID_comman
 This is by no means an exhaustive use of Standard-Grid, but hopefully it provides you a good start.
 
 ## Notes and Extras
-1. To get this working with your code, you'll need to replace the following line in `generate.py` with the correct working directory where your code is stored
-```
-root=/path/to/your/proj
-```
-2. `results.txt` must have same keys across each element in a grid search, otherwise the `results.txt` files will not be collated into a single csv.
-3. I don't know of an incredibly elegant way to stop an ongoing search (though there probably is one).  If you exit the program while `main.sh` is running, the workers will still run in the background (a feature, not a bug).  I usually insert an error into `model.py` (e.g., an undefined `hi`), `kill` the processes currently running by finding their ids with `nvidia-smi`, and watch as all the rest of the queued processes quickly fail.
-4. I often find that I need to remove previous grid searches I've run, and it's a pain to do this by hand each time.  I wrote myself a helper function and put it in my `~./bashrc`.  To get it to work, simply add this to your `bashrc`, `source ~/.bashrc`, and run it with `rmhash $hash` from the relevant directory.  Be careful! I accidentally wiped out the wrong folder once.
+1. `results.txt` must have same keys across each element in a grid search, otherwise the `results.txt` files will not be collated into a single csv.
+2. I don't know of an incredibly elegant way to stop an ongoing search (though there probably is one).  If you exit the program while `main.sh` is running, the workers will still run in the background (a feature, not a bug).  I usually insert an error into `model.py` (e.g., an undefined `hi`), `kill` the processes currently running by finding their ids with `nvidia-smi`, and watch as all the rest of the queued processes quickly fail.
+3. I often find that I need to remove previous grid searches I've run, and it's a pain to do this by hand each time.  I wrote myself a helper function and put it in my `~./bashrc`.  To get it to work, simply add this to your `bashrc`, `source ~/.bashrc`, and run it with `rmhash $hash` from the relevant directory.  Be careful! I accidentally wiped out the wrong folder once.
 
 ```bash
 function rmhash {
@@ -139,5 +135,5 @@ function rmhash {
 }
 ```
 
-5. I don't like waiting around for my code to finish, so in addition to the ETA you'll find in `status.py`, I wrote myself a function to email me when my program has finished. It uses [mailgun](https://www.mailgun.com/), which is free up to a large number of emails each month. If you want to leverage this part of the code, get a `mailgun_secrets.json` file with your API key and modify the code in `generate.py` to point to it.  Then replace `email_args=None` with the correct object and you'll be ready to go.
+4. I don't like waiting around for my code to finish, so in addition to the ETA you'll find in `status.py`, I wrote myself a function to email me when my program has finished. It uses [mailgun](https://www.mailgun.com/), which is free up to a large number of emails each month. If you want to leverage this part of the code, get a `mailgun_secrets.json` file with your API key and modify the code in `generate.py` to point to it.  Then replace `email_args=None` with the correct object and you'll be ready to go.
 
