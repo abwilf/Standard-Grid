@@ -247,10 +247,10 @@ class Grid:
             else:
                 failed.append(command_hex)
 
-        log.status("Not started:	%.2f%%"%(float(len(not_started))*100/len(command_hexes)))
-        log.status("Unfinished*:	%.2f%%"%(float(len(started))    *100/len(command_hexes)))
-        log.status("Finished:		%.2f%%"%(float(len(finished))   *100/len(command_hexes)))
-        log.status("Failed:		%.2f%%"%(float(len(failed))     *100/len(command_hexes)))
+        log.status("Not started:    %.2f%%"%(float(len(not_started))*100/len(command_hexes)))
+        log.status("Unfinished*:    %.2f%%"%(float(len(started))    *100/len(command_hexes)))
+        log.status("Finished:        %.2f%%"%(float(len(finished))   *100/len(command_hexes)))
+        log.status("Failed:        %.2f%%"%(float(len(failed))     *100/len(command_hexes)))
 
         num_completed = len(finished)+len(failed)
         num_tot = len(command_hexes)
