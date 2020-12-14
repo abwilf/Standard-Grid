@@ -119,7 +119,7 @@ This is by no means an exhaustive use of Standard-Grid, but hopefully it provide
 ## Notes and Extras
 1. `results.txt` must have same keys across each element in a grid search, otherwise the `results.txt` files will not be collated into a single csv.
 2. I don't know of an incredibly elegant way to stop an ongoing search (though there probably is one).  If you exit the program while `main.sh` is running, the workers will still run in the background (a feature, not a bug).  I usually insert an error into `model.py` (e.g., an undefined `hi`), `kill` the processes currently running by finding their ids with `nvidia-smi`, and watch as all the rest of the queued processes quickly fail.
-3. I often find that I need to remove previous grid searches I've run, and it's a pain to do this by hand each time.  I wrote myself a helper function and put it in my `~./bashrc`.  To get it to work, simply add this to your `bashrc`, `source ~/.bashrc`, and run it with `rmhash $hash` from the relevant directory.  Be careful! I accidentally wiped out the wrong folder once.
+3. I often find that I need to remove previous grid searches I've run, and it's a pain to do this by hand each time.  I wrote myself a helper function and put it in my `~/.bashrc`.  To get it to work, simply add this to your `.bashrc`, `source ~/.bashrc`, and run it with `rmhash $hash` from the relevant directory.  Be careful! I accidentally wiped out the wrong folder once.
 
 ```bash
 function rmhash {
@@ -137,7 +137,7 @@ function rmhash {
 
 4. I don't like waiting around for my code to finish, so in addition to the ETA you'll find in `status.py`, I wrote myself a function to email me when my program has finished. It uses [mailgun](https://www.mailgun.com/), which is free up to a large number of emails each month. If you want to leverage this part of the code, get a `mailgun_secrets.json` file with your API key and modify the code in `generate.py` to point to it.  Then replace `email_args=None` with the correct object and you'll be ready to go.
 
-5. A tiny but fun optimization: I usually open another screen and type `watch python3 status.py $hash`, so that screen always contains the real time status of the search.
+5. A tiny but fun optimization: I usually open a screen and enter `watch python3 status.py $hash`, so that screen always contains the real time status of the search.
 6. Using linux screen with Standard-Grid is particularly helpful, but since I find it cumbersome to remember all of the different screen commands, I wrote some aliases in my `~/.bashrc` that I include here.  The `PS1` line changes my command prompt so the name of the current screen is the first thing I see.  The other lines are described below.
 ```bash
 PS1="[$(echo ${STY} | cut -d '.' -f2)]"
@@ -149,17 +149,17 @@ export -f sx
 
 Usage:
 
-Create a screen called "one"
+Create a screen `one`
 ```
 ss one
 ```
 
-Open screen "one"
+Open screen `one`
 ```
 sr one
 ```
 
-Close screen "one" from the main screen
+Close screen `one` from the main screen
 ```
 sx one
 ```
