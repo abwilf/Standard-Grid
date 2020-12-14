@@ -137,3 +137,35 @@ function rmhash {
 
 4. I don't like waiting around for my code to finish, so in addition to the ETA you'll find in `status.py`, I wrote myself a function to email me when my program has finished. It uses [mailgun](https://www.mailgun.com/), which is free up to a large number of emails each month. If you want to leverage this part of the code, get a `mailgun_secrets.json` file with your API key and modify the code in `generate.py` to point to it.  Then replace `email_args=None` with the correct object and you'll be ready to go.
 
+5. A tiny but fun optimization: I usually open another screen and type `watch python3 status.py $hash`, so that screen always contains the real time status of the search.
+6. Using linux screen with Standard-Grid is particularly helpful, but since I find it cumbersome to remember all of the different screen commands, I wrote some aliases in my `~/.bashrc` that I include here.  The `PS1` line changes my command prompt so the name of the current screen is the first thing I see.  The other lines are described below.
+```bash
+PS1="[$(echo ${STY} | cut -d '.' -f2)]"
+alias sr='screen -h 10000 -rd'
+alias ss='screen -h 10000 -S'
+function sx { screen -X -S "$1" quit; }
+export -f sx
+```
+
+Usage:
+
+Create a screen called "one"
+```
+ss one
+```
+
+Open screen "one"
+```
+sr one
+```
+
+Close screen "one" from the main screen
+```
+sx one
+```
+
+See all available screens (if there is only one, this will open that screen)
+```
+sr
+```
+

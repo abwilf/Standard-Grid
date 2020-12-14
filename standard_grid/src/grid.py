@@ -273,7 +273,9 @@ class Grid:
             
             if change:
                 self.save(dump_fname=f'./.{self.grid_hash}.pkl')
-
+        else:
+            print(self.rt.get_eta(num_completed, num_tot), end='')
+        
         return started,finished,failed,not_started
 
     def resume_as_before(self,hard_resume=False):
