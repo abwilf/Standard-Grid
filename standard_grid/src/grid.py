@@ -27,6 +27,9 @@ def send_email(subject, text, to_addr, secrets_path):
             "subject": subject,
             "text": text})
 
+def display_time(time_change):
+    return '{:02d}:{:02d}:{:02d}'.format(int(time_change/(60*60)), int((time_change%(60*60))/60), int(time_change%(60)))
+
 class Runtime():
     def __init__(self):
         self.start_time = datetime.datetime.now()
@@ -70,8 +73,8 @@ class Runtime():
         msg = '\n##### Progress #####'
         msg += f'\nCompleted: {num_completed}\nRemaining: {num_tot-num_completed}\nTotal: {num_tot}'
         if time_left < NUM_SECS_WEEK - 3*NUM_SECS_DAY:
-            msg += '\nTime spent: ' + time.strftime('%H:%M:%S', time.gmtime(time_spent)) + ' (per test: ' + time.strftime('%H:%M:%S', time.gmtime(time_spent/num_completed)) + ')'
-            msg += '\nTime remaining: ' + time.strftime('%H:%M:%S', time.gmtime(time_left))
+            msg += '\nTime spent: ' + display_time(time_spent) + ' (per test: ' + display_time(time_spent/num_completed) + ')'
+            msg += '\nTime remaining: ' + display_time(time_left)
             strftime_str = '%a %I:%M:%S %p'
             
         # if more than a week, include date
@@ -250,10 +253,11 @@ class Grid:
             else:
                 failed.append(command_hex)
 
-        log.status("Not started:    %.2f%%"%(float(len(not_started))*100/len(command_hexes)))
-        log.status("Unfinished*:    %.2f%%"%(float(len(started))    *100/len(command_hexes)))
-        log.status("Finished:        %.2f%%"%(float(len(finished))   *100/len(command_hexes)))
-        log.status("Failed:        %.2f%%"%(float(len(failed))     *100/len(command_hexes)))
+        print("Not started:    %.2f%%"%(float(len(not_started))*100/len(command_hexes)))
+        print("Unfinished*:    %.2f%%"%(float(len(started))    *100/len(command_hexes)))
+        print("Finished:        %.2f%%"%(float(len(finished))   *100/len(command_hexes)))
+        print("Failed:        %.2f%%"%(float(len(failed))     *100/len(command_hexes)))
+        print()
 
         num_completed = len(finished)+len(failed)
         num_tot = len(command_hexes)
@@ -457,7 +461,11 @@ class Grid:
             for res in res_list:
                 row=[]
                 for key in res0:
-                    row.append(res[key])
+                    try:
+                        row.append(res[key])
+                    except:
+                        print(f'Error! no {key} in {res}')
+                        return
                 csv_writer.writerow(row)
 
         log.success("Results gathered in %s"%output_fname)
