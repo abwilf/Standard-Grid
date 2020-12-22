@@ -21,7 +21,7 @@ class ArgParser:
         self.parameters={}
         
     
-    def register_parameter(self,__name,__type,__default,__help=""):
+    def register_parameter(self,__name,__type,__default,__help="",__choices=[]):
         """ Registers a parameter for machine learning code 
 
         # Arguments
@@ -37,7 +37,7 @@ class ArgParser:
         if __name in list(self.parameters.keys()):
             log.error("Parameter already registered. Exiting ...!",error=True)
         
-        self.parameters[__name]=[__type,__default,__help]
+        self.parameters[__name]=[__type,__default,__help,__choices]
         
         
     def compile_argparse(self,dict_style=False):
@@ -55,7 +55,8 @@ class ArgParser:
 
         parser = argparse.ArgumentParser()
         for key in list(self.parameters.keys()):
-            parser.add_argument(str(key), type=self.parameters[key][0], default=self.parameters[key][1],help=self.parameters[key][2])
+            choices = None if self.parameters[key][3] == [] else self.parameters[key][3]
+            parser.add_argument(str(key), type=self.parameters[key][0], default=self.parameters[key][1],help=self.parameters[key][2],choices=choices)
 
         if dict_style is False:
             return parser.parse_args()
